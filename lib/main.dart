@@ -6,6 +6,7 @@ import 'package:another_brother/label_info.dart';
 import 'package:another_brother/printer_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tflite/tflite.dart';
 
 void main() {
   runApp(MyApp());
@@ -61,7 +62,7 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
   Uint8List pngBytes;
   GlobalKey _globalKey = GlobalKey();
 
-  void print(BuildContext context) async {
+  void brother_print(BuildContext context) async {
     var printer = new Printer();
     var printInfo = PrinterInfo();
     printInfo.printerModel = Model.QL_1110NWB;
@@ -96,7 +97,7 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
     // printer.printImage(await loadImage('assets/brother_hack.png'));
     // await _capturePng();
     // printer.printImage(await loadImageFromUint8List(pngBytes));
-    printer.printImage(await loadImage('assets/brother_hack.png'));
+    printer.printImage(await p2pImage('assets/brother_hack.png'));
   }
 
   /*
@@ -145,7 +146,7 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => print(context),
+        onPressed: () => brother_print(context),
         tooltip: 'Print',
         child: Icon(Icons.print),
       ), // This trailing comma makes auto-formatting nicer for build methods.
@@ -159,6 +160,40 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
       return completer.complete(img);
     });
     return completer.future;
+  }
+
+  // Load tflite model file
+  loadModel(String modelFile, {String labelsFile}) async {
+    Tflite.close();
+    try {
+      String res;
+      res = await Tflite.loadModel(
+        model: modelFile,
+        labels: labelsFile,
+      );
+      print(res);
+    } on PlatformException {
+      print("cant load model");
+    }
+  }
+
+  Future<ui.Image> p2pImage(String assetPath) async {
+    print('Loading model ...');
+    await loadModel('assets/models/whitebox_cartoon_gan_int8.tflite');
+    print('Model loaded.');
+
+    /*
+    var result = await Tflite.runPix2PixOnImage(
+        path: assetPath, // required
+        imageMean: 0.0, // defaults to 0.0
+        imageStd: 255.0, // defaults to 255.0
+        asynch: true // defaults to true
+        );
+
+    return await loadImageFromUint8List(result);
+    */
+
+    return await loadImage(assetPath);
   }
 
   Future<ui.Image> loadImageFromUint8List(Uint8List encodedImage) async {

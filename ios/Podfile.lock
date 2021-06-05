@@ -13,17 +13,23 @@ PODS:
   - path_provider (0.0.1):
     - Flutter
   - Protobuf (3.11.4)
+  - TensorFlowLiteC (2.2.0)
+  - tflite (1.1.2):
+    - Flutter
+    - TensorFlowLiteC
 
 DEPENDENCIES:
   - another_brother (from `.symlinks/plugins/another_brother/ios`)
   - Flutter (from `Flutter`)
   - flutter_blue (from `.symlinks/plugins/flutter_blue/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
+  - tflite (from `.symlinks/plugins/tflite/ios`)
 
 SPEC REPOS:
   trunk:
     - BRLMPrinterKit
     - Protobuf
+    - TensorFlowLiteC
 
 EXTERNAL SOURCES:
   another_brother:
@@ -34,6 +40,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_blue/ios"
   path_provider:
     :path: ".symlinks/plugins/path_provider/ios"
+  tflite:
+    :path: ".symlinks/plugins/tflite/ios"
 
 SPEC CHECKSUMS:
   another_brother: d81929220683ec2e9c1d66f9c4c190300e26c599
@@ -42,6 +50,8 @@ SPEC CHECKSUMS:
   flutter_blue: eeb381dc4727a0954dede73515f683865494b370
   path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
   Protobuf: 176220c526ad8bd09ab1fb40a978eac3fef665f7
+  TensorFlowLiteC: b3ab9e867b0b71052ca102a32a786555b330b02e
+  tflite: 7acd11db0915e2d90ab90474413068568eb605f0
 
 PODFILE CHECKSUM: de2120689bd64c50778c43ebcd6de450aa1587e0
 
