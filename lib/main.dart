@@ -58,6 +58,8 @@ class QlBluetoothPrintPage extends StatefulWidget {
 
 class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
   bool _error = false;
+  Uint8List pngBytes;
+  GlobalKey _globalKey = GlobalKey();
 
   void print(BuildContext context) async {
     var printer = new Printer();
@@ -91,8 +93,25 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
     printInfo.macAddress = printers.single.macAddress;
 
     printer.setPrinterInfo(printInfo);
+    // printer.printImage(await loadImage('assets/brother_hack.png'));
+    // await _capturePng();
+    // printer.printImage(await loadImageFromUint8List(pngBytes));
     printer.printImage(await loadImage('assets/brother_hack.png'));
   }
+
+  /*
+  Future<void> _capturePng() async {
+    try {
+      final RenderRepaintBoundary boundary =
+          _globalKey.currentContext.findRenderObject();
+      final image = await boundary.toImage(pixelRatio: 2.0); // image quality
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      pngBytes = byteData.buffer.asUint8List();
+    } catch (e) {
+      print(e);
+    }
+  }
+   */
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +156,14 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
     final ByteData img = await rootBundle.load(assetPath);
     final Completer<ui.Image> completer = new Completer();
     ui.decodeImageFromList(new Uint8List.view(img.buffer), (ui.Image img) {
+      return completer.complete(img);
+    });
+    return completer.future;
+  }
+
+  Future<ui.Image> loadImageFromUint8List(Uint8List encodedImage) async {
+    final Completer<ui.Image> completer = new Completer();
+    ui.decodeImageFromList(encodedImage, (ui.Image img) {
       return completer.complete(img);
     });
     return completer.future;
