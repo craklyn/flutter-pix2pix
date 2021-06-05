@@ -54,6 +54,7 @@ flutter:
   assets:
     - assets/brother_hack.png
     - assets/models/whitebox_cartoon_gan_int8.tflite
+    - assets/models/ssd_mobilenet.txt
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
