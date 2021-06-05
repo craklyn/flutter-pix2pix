@@ -178,20 +178,36 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
   }
 
   Future<ui.Image> p2pImage(String assetPath) async {
-    print('Loading model ...');
-    await loadModel('assets/models/whitebox_cartoon_gan_int8.tflite');
-    print('Model loaded.');
+    Tflite.close();
 
-    /*
-    var result = await Tflite.runPix2PixOnImage(
-        path: assetPath, // required
-        imageMean: 0.0, // defaults to 0.0
-        imageStd: 255.0, // defaults to 255.0
-        asynch: true // defaults to true
+    print('Loading model ...');
+    String res = await Tflite.loadModel(
+        model: "assets/models/whitebox_cartoon_gan_int8.tflite",
+        labels: "assets/models/ssd_mobilenet.txt",
+        numThreads: 1, // defaults to 1
+        isAsset:
+            true, // defaults to true, set to false to load resources outside assets
+        useGpuDelegate:
+            false // defaults to false, set to true to use GPU delegate
         );
 
+    print('Model loaded.');
+
+/*
+    var imageBinary = (await rootBundle.load(assetPath)).buffer.asUint8List();
+
+    var result = await Tflite.runPix2PixOnBinary(
+        binary: imageBinary,
+        asynch: true, // defaults to true
+        outputType: "png");
+ */
+
+    var result = await Tflite.runPix2PixOnImage(
+        path: assetPath,
+        asynch: true, // defaults to true
+        outputType: "png");
+
     return await loadImageFromUint8List(result);
-    */
 
     return await loadImage(assetPath);
   }
