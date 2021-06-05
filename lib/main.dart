@@ -6,7 +6,6 @@ import 'package:another_brother/label_info.dart';
 import 'package:another_brother/printer_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:tflite/tflite.dart';
 
 void main() {
   runApp(MyApp());
@@ -33,7 +32,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: PageView(children: [
-        QlBluetoothPrintPage(title: 'QL-1110NWB Bluetooth Sample')
+        QlBluetoothPrintPage(title: 'QL-1110NWB Bluetooth Sample'),
       ]),
     );
   }
@@ -59,80 +58,8 @@ class QlBluetoothPrintPage extends StatefulWidget {
 
 class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
   bool _error = false;
-  Uint8List _imbyte = null;
-  bool _busy = false;
-
-  void runModel(var image) async {
-    try {
-      await Tflite.runPix2PixOnImage(
-        path: image,
-        imageStd: 255,
-        asynch: true,
-        imageMean: 0,
-        outputType: "png",
-      ).then((value) {
-        // Image Generated");
-
-        setState(() {
-          // var _im2 = IMG.grayscale(_im);
-          _imbyte = value;
-        });
-        // print(_imbyte);
-      });
-    } catch (e) {
-      // print("ERROR CUSTOM :" + e);
-    }
-    await Tflite.close();
-
-    setState(() {
-      _busy = false;
-    });
-    // print("Model Closed");
-    // try {
-    //   IO.File(_tempDir).deleteSync();
-    //   print("Temporary Image Deleted");
-    // } catch (e) {
-    //   print("Error ON IO: " + e);
-    // }
-  }
 
   void print(BuildContext context) async {
-    var printer = new Printer();
-    var printInfo = PrinterInfo();
-    printInfo.printerModel = Model.QL_1110NWB;
-    printInfo.printMode = PrintMode.FIT_TO_PAGE;
-    printInfo.isAutoCut = true;
-    printInfo.port = Port.BLUETOOTH;
-    // Set the label type.
-    printInfo.labelNameIndex = QL1100.ordinalFromID(QL1100.W103.getId());
-
-    // Set the printer info so we can use the SDK to get the printers.
-    await printer.setPrinterInfo(printInfo);
-
-    // Get a list of printers with my model available in the network.
-    List<BluetoothPrinter> printers =
-        await printer.getBluetoothPrinters([Model.QL_1110NWB.getName()]);
-
-    if (printers.isEmpty) {
-      // Show a message if no printers are found.
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text("No paired printers found on your device."),
-        ),
-      ));
-
-      return;
-    }
-    // Get the IP Address from the first printer found.
-    printInfo.macAddress = printers.single.macAddress;
-
-    printer.setPrinterInfo(printInfo);
-    await runModel('assets/brother_hack.png');
-    printer.printImage(await loadImageFromUint8List(_imbyte));
-  }
-
-  void print_old(BuildContext context) async {
     var printer = new Printer();
     var printInfo = PrinterInfo();
     printInfo.printerModel = Model.QL_1110NWB;
@@ -210,14 +137,6 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
     final ByteData img = await rootBundle.load(assetPath);
     final Completer<ui.Image> completer = new Completer();
     ui.decodeImageFromList(new Uint8List.view(img.buffer), (ui.Image img) {
-      return completer.complete(img);
-    });
-    return completer.future;
-  }
-
-  Future<ui.Image> loadImageFromUint8List(Uint8List encoded_image) async {
-    final Completer<ui.Image> completer = new Completer();
-    ui.decodeImageFromList(encoded_image, (ui.Image img) {
       return completer.complete(img);
     });
     return completer.future;
