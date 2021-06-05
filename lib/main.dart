@@ -2,21 +2,18 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:another_brother/custom_paper.dart';
 import 'package:another_brother/label_info.dart';
 import 'package:another_brother/printer_info.dart';
-import 'package:another_brother/type_b_printer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tflite/tflite.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final controller = PageController (
-    initialPage: 1
-  );
+  final controller = PageController(initialPage: 1);
 
   // This widget is the root of your application.
   @override
@@ -36,321 +33,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: PageView(children: [
-        BleRjPrintPage(title: 'RJ-4250WB BLE Sample'),
-        QlBluetoothPrintPage(title: 'QL-1110NWB Bluetooth Sample'),
-        WifiPrintPage(title: 'PJ-773 WiFi Sample'),
-        BleRjCustomPaperPrintPage(title: 'RJ-4250WB Bin Sample'),
-        TypeBbluetoothPrintPage(title: 'RJ-2055WB BT Sample'),
-        WifiPrinterListPage(title: "Sample WiFi List")
+        QlBluetoothPrintPage(title: 'QL-1110NWB Bluetooth Sample')
       ]),
-
     );
-  }
-}
-
-class WifiPrintPage extends StatefulWidget {
-  WifiPrintPage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  _WifiPrintPageState createState() => _WifiPrintPageState();
-}
-
-class _WifiPrintPageState extends State<WifiPrintPage> {
-
-  bool _error = false;
-
-  void print(BuildContext context) async {
-
-    var printer = new Printer();
-    var printInfo = PrinterInfo();
-    printInfo.printerModel = Model.PJ_773;
-    printInfo.printMode = PrintMode.FIT_TO_PAGE;
-    printInfo.isAutoCut = true;
-    printInfo.port = Port.NET;
-    // Set the label type.
-    printInfo.paperSize = PaperSize.A4;
-
-    // Set the printer info so we can use the SDK to get the printers.
-    await printer.setPrinterInfo(printInfo);
-
-    // Get a list of printers with my model available in the network.
-    List<NetPrinter> printers = await printer.getNetPrinters([Model.PJ_773.getName()]);
-
-    if (printers.isEmpty) {
-      // Show a message if no printers are found.
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text("No printers found on your network."),
-        ),
-      ));
-
-      return;
-    }
-    // Get the IP Address from the first printer found.
-    printInfo.ipAddress = printers.single.ipAddress;
-
-    printer.setPrinterInfo(printInfo);
-    printer.printImage(await loadImage('assets/brother_hack.png'));
-
-  }
-  @override
-  Widget build(BuildContext context) {
-
-
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text("Don't forget to grant permissions to your app in Settings.", textAlign: TextAlign.center,),
-            ),
-            Image(image: AssetImage('assets/brother_hack.png'))
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => print(context),
-        tooltip: 'Print',
-        child: Icon(Icons.print),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-
-  Future<ui.Image> loadImage(String assetPath) async {
-    final ByteData img = await rootBundle.load(assetPath);
-    final Completer<ui.Image> completer = new Completer();
-    ui.decodeImageFromList(new Uint8List.view(img.buffer), (ui.Image img) {
-      return completer.complete(img);
-    });
-    return completer.future;
-  }
-}
-
-
-class BleRjPrintPage extends StatefulWidget {
-  BleRjPrintPage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  _BleRjPrintPageState createState() => _BleRjPrintPageState();
-}
-
-class _BleRjPrintPageState extends State<BleRjPrintPage> {
-
-  bool _error = false;
-
-  void print(BuildContext context) async {
-
-    var printer = new Printer();
-    var printInfo = PrinterInfo();
-    printInfo.printerModel = Model.RJ_4250WB;
-    printInfo.printMode = PrintMode.FIT_TO_PAGE;
-    printInfo.isAutoCut = true;
-    printInfo.port = Port.BLE;
-    // Set the label type.
-    double width = 102.0;
-    double rightMargin = 0.0;
-    double leftMargin = 0.0;
-    double topMargin = 0.0;
-    CustomPaperInfo customPaperInfo = CustomPaperInfo.newCustomRollPaper(printInfo.printerModel,
-        Unit.Mm,
-        width,
-        rightMargin,
-        leftMargin,
-        topMargin);
-    printInfo.customPaperInfo = customPaperInfo;
-
-    // Set the printer info so we can use the SDK to get the printers.
-    await printer.setPrinterInfo(printInfo);
-
-    // Get a list of printers with my model available in the network.
-    List<BLEPrinter> printers = await printer.getBLEPrinters(3000);
-
-    if (printers.isEmpty) {
-      // Show a message if no printers are found.
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text("No printers found on your network."),
-        ),
-      ));
-
-      return;
-    }
-    // Get the BT name from the first printer found.
-    printInfo.setLocalName(printers.single.localName);
-
-    printer.setPrinterInfo(printInfo);
-    printer.printImage(await loadImage('assets/brother_hack.png'));
-
-  }
-  @override
-  Widget build(BuildContext context) {
-
-
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text("Don't forget to grant permissions to your app in Settings.", textAlign: TextAlign.center,),
-            ),
-            Image(image: AssetImage('assets/brother_hack.png'))
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => print(context),
-        tooltip: 'Print',
-        child: Icon(Icons.print),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-
-  Future<ui.Image> loadImage(String assetPath) async {
-    final ByteData img = await rootBundle.load(assetPath);
-    final Completer<ui.Image> completer = new Completer();
-    ui.decodeImageFromList(new Uint8List.view(img.buffer), (ui.Image img) {
-      return completer.complete(img);
-    });
-    return completer.future;
-  }
-}
-
-class BleRjCustomPaperPrintPage extends StatefulWidget {
-  BleRjCustomPaperPrintPage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  _BleRjCustomPaperPrintPageState createState() => _BleRjCustomPaperPrintPageState();
-}
-
-class _BleRjCustomPaperPrintPageState extends State<BleRjCustomPaperPrintPage> {
-
-  bool _error = false;
-
-  void print(BuildContext context) async {
-
-    var printer = new Printer();
-    var printInfo = PrinterInfo();
-    printInfo.printerModel = Model.RJ_4250WB;
-    printInfo.printMode = PrintMode.FIT_TO_PAGE;
-    printInfo.isAutoCut = true;
-    printInfo.port = Port.BLE;
-    // Set the label bin file.
-    printInfo.binCustomPaper = BinPaper_RJ4250.RD_W4in;
-
-    // Set the printer info so we can use the SDK to get the printers.
-    await printer.setPrinterInfo(printInfo);
-
-    // Get a list of printers with my model available in the network.
-    List<BLEPrinter> printers = await printer.getBLEPrinters(3000);
-
-    if (printers.isEmpty) {
-      // Show a message if no printers are found.
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text("No printers found on your network."),
-        ),
-      ));
-
-      return;
-    }
-    // Get the BT name from the first printer found.
-    printInfo.setLocalName(printers.single.localName);
-
-    printer.setPrinterInfo(printInfo);
-    printer.printImage(await loadImage('assets/brother_hack.png'));
-
-  }
-  @override
-  Widget build(BuildContext context) {
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text("Don't forget to grant permissions to your app in Settings.", textAlign: TextAlign.center,),
-            ),
-            Image(image: AssetImage('assets/brother_hack.png'))
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => print(context),
-        tooltip: 'Print',
-        child: Icon(Icons.print),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-
-  Future<ui.Image> loadImage(String assetPath) async {
-    final ByteData img = await rootBundle.load(assetPath);
-    final Completer<ui.Image> completer = new Completer();
-    ui.decodeImageFromList(new Uint8List.view(img.buffer), (ui.Image img) {
-      return completer.complete(img);
-    });
-    return completer.future;
   }
 }
 
@@ -373,11 +58,45 @@ class QlBluetoothPrintPage extends StatefulWidget {
 }
 
 class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
-
   bool _error = false;
+  Uint8List _imbyte = null;
+  bool _busy = false;
+
+  void runModel(var image) async {
+    try {
+      await Tflite.runPix2PixOnImage(
+        path: image,
+        imageStd: 255,
+        asynch: true,
+        imageMean: 0,
+        outputType: "png",
+      ).then((value) {
+        // Image Generated");
+
+        setState(() {
+          // var _im2 = IMG.grayscale(_im);
+          _imbyte = value;
+        });
+        // print(_imbyte);
+      });
+    } catch (e) {
+      // print("ERROR CUSTOM :" + e);
+    }
+    await Tflite.close();
+
+    setState(() {
+      _busy = false;
+    });
+    // print("Model Closed");
+    // try {
+    //   IO.File(_tempDir).deleteSync();
+    //   print("Temporary Image Deleted");
+    // } catch (e) {
+    //   print("Error ON IO: " + e);
+    // }
+  }
 
   void print(BuildContext context) async {
-
     var printer = new Printer();
     var printInfo = PrinterInfo();
     printInfo.printerModel = Model.QL_1110NWB;
@@ -391,7 +110,44 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
     await printer.setPrinterInfo(printInfo);
 
     // Get a list of printers with my model available in the network.
-    List<BluetoothPrinter> printers = await printer.getBluetoothPrinters([Model.QL_1110NWB.getName()]);
+    List<BluetoothPrinter> printers =
+        await printer.getBluetoothPrinters([Model.QL_1110NWB.getName()]);
+
+    if (printers.isEmpty) {
+      // Show a message if no printers are found.
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text("No paired printers found on your device."),
+        ),
+      ));
+
+      return;
+    }
+    // Get the IP Address from the first printer found.
+    printInfo.macAddress = printers.single.macAddress;
+
+    printer.setPrinterInfo(printInfo);
+    await runModel('assets/brother_hack.png');
+    printer.printImage(await loadImageFromUint8List(_imbyte));
+  }
+
+  void print_old(BuildContext context) async {
+    var printer = new Printer();
+    var printInfo = PrinterInfo();
+    printInfo.printerModel = Model.QL_1110NWB;
+    printInfo.printMode = PrintMode.FIT_TO_PAGE;
+    printInfo.isAutoCut = true;
+    printInfo.port = Port.BLUETOOTH;
+    // Set the label type.
+    printInfo.labelNameIndex = QL1100.ordinalFromID(QL1100.W103.getId());
+
+    // Set the printer info so we can use the SDK to get the printers.
+    await printer.setPrinterInfo(printInfo);
+
+    // Get a list of printers with my model available in the network.
+    List<BluetoothPrinter> printers =
+        await printer.getBluetoothPrinters([Model.QL_1110NWB.getName()]);
 
     if (printers.isEmpty) {
       // Show a message if no printers are found.
@@ -409,12 +165,10 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
 
     printer.setPrinterInfo(printInfo);
     printer.printImage(await loadImage('assets/brother_hack.png'));
-
   }
+
   @override
   Widget build(BuildContext context) {
-
-
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -435,7 +189,10 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text("Don't forget to grant permissions to your app in Settings.", textAlign: TextAlign.center,),
+              child: Text(
+                "Don't forget to grant permissions to your app in Settings.",
+                textAlign: TextAlign.center,
+              ),
             ),
             Image(image: AssetImage('assets/brother_hack.png'))
           ],
@@ -457,209 +214,10 @@ class _QlBluetoothPrintPageState extends State<QlBluetoothPrintPage> {
     });
     return completer.future;
   }
-}
 
-class TypeBbluetoothPrintPage extends StatefulWidget {
-  TypeBbluetoothPrintPage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  _TypeBbluetoothPrintPageState createState() => _TypeBbluetoothPrintPageState();
-}
-
-class _TypeBbluetoothPrintPageState extends State<TypeBbluetoothPrintPage> {
-
-  bool _error = false;
-
-  void print(BuildContext context) async {
-
-    var printer = new TbPrinter();
-    var printInfo = TbPrinterInfo();
-    printInfo.printerModel = TbModel.RJ_2055WB;
-    printInfo.port = Port.BLUETOOTH;
-
-    // Set the printer info so we can use the SDK to get the printers.
-    await printer.setPrinterInfo(printInfo);
-
-    // Get a list of printers with my model available in the network.
-    List<BluetoothPrinter> printers = await printer.getBluetoothPrinters([TbModel.RJ_2055WB.getName()]);
-
-    if (printers.isEmpty) {
-      // Show a message if no printers are found.
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text("No paired printers found on your device."),
-        ),
-      ));
-
-      return;
-    }
-    // Get the IP Address from the first printer found.
-    printInfo.btAddress = printers.single.macAddress;
-
-    await printer.setPrinterInfo(printInfo);
-    // Open communication
-    bool success = await printer.startCommunication();
-    // Setup the label
-    success = await printer.setup();
-    // Clear printer buffer.
-    success = await printer.clearBuffer();
-    // Download the image to print to the printer.
-    success = await printer.downloadImageAsset('assets/brother_hack.png', scale: 0.6);
-    // Print the image.
-    success = await printer.printLabel();
-    // End the communication to the printer.
-    // IMPORTANT: If you close the connection before the printer prints not print will happen.
-    success = await printer.endCommunication(timeoutMillis:5000);
-
-  }
-  @override
-  Widget build(BuildContext context) {
-
-
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text("Don't forget to grant permissions to your app in Settings.", textAlign: TextAlign.center,),
-            ),
-            Image(image: AssetImage('assets/brother_hack.png'))
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => print(context),
-        tooltip: 'Print',
-        child: Icon(Icons.print),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-
-  Future<ui.Image> loadImage(String assetPath) async {
-    final ByteData img = await rootBundle.load(assetPath);
+  Future<ui.Image> loadImageFromUint8List(Uint8List encoded_image) async {
     final Completer<ui.Image> completer = new Completer();
-    ui.decodeImageFromList(new Uint8List.view(img.buffer), (ui.Image img) {
-      return completer.complete(img);
-    });
-    return completer.future;
-  }
-}
-
-class WifiPrinterListPage extends StatefulWidget {
-  WifiPrinterListPage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  _WifiPrinterListPageState createState() => _WifiPrinterListPageState();
-}
-
-class _WifiPrinterListPageState extends State<WifiPrinterListPage> {
-
-  Future<List<NetPrinter>>getMyNetworkPrinters() async {
-    Printer printer = new Printer();
-    PrinterInfo printInfo = new PrinterInfo();
-
-    await printer.setPrinterInfo(printInfo);
-    return printer.getNetPrinters([Model.QL_1110NWB.getName(), Model.PJ_773.getName()]);
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-
-   return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: FutureBuilder(
-        future: getMyNetworkPrinters(),
-        builder: (buildContext, snapShot) {
-
-          if(snapShot.connectionState == ConnectionState.waiting) {
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text("Looking for printers."),
-            );
-          }
-
-          if (snapShot.hasData) {
-            // TODO Return a list
-            List<NetPrinter> foundPrinters = snapShot.data;
-
-            if (foundPrinters.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text("No printers found."),
-              );
-            }
-
-            return ListView.builder(
-                itemCount: foundPrinters.length,
-                itemBuilder: (context, index) {
-              return Card(
-                child: ListTile(title:Text("Printer: ${foundPrinters[index].modelName}"),
-                subtitle: Text("IP: ${foundPrinters[index].ipAddress}"),
-                onTap: () {
-                  // TODO Do anything you want! Maybe print?
-                },
-                ),
-              );
-            });
-          }
-          else {
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text("Looking for printers."),
-            );
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-
-          });
-        },
-        tooltip: 'Retry',
-        child: Icon(Icons.refresh),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-
-  Future<ui.Image> loadImage(String assetPath) async {
-    final ByteData img = await rootBundle.load(assetPath);
-    final Completer<ui.Image> completer = new Completer();
-    ui.decodeImageFromList(new Uint8List.view(img.buffer), (ui.Image img) {
+    ui.decodeImageFromList(encoded_image, (ui.Image img) {
       return completer.complete(img);
     });
     return completer.future;
